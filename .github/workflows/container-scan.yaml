@@ -23,15 +23,22 @@ jobs:
       - name: Login to Docker Hub
         run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
 
-      - name: Check Docker Image Existence
+      - name: Check Docker Image Existence with Retry
         id: image_check
         run: |
-          if docker manifest inspect docker.io/gvindio/supermariogitopsproject:${{ env.new_version }} > /dev/null; then
-            echo "exists=true" >> $GITHUB_ENV
-          else
-            echo "Docker image does not exist for version ${{ env.new_version }}"
-            exit 1
-          fi
+          for i in {1..5}; do
+            if docker manifest inspect docker.io/gvindio/supermariogitopsproject:${{ env.new_version }} > /dev/null; then
+              echo "exists=true" >> $GITHUB_ENV
+              break
+            else
+              echo "Attempt $i: Docker image does not exist for version ${{ env.new_version }}. Retrying in 30 seconds..."
+              sleep 30
+            fi
+            if [ $i -eq 5 ]; then
+              echo "Docker image does not exist for version ${{ env.new_version }} after 5 attempts."
+              exit 1
+            fi
+          done
 
       - name: Get Docker Image from Docker Hub
         if: env.exists == 'true'
