@@ -1,5 +1,5 @@
 name: "Run Container Scan on Super Mario Docker Image with Quality Gate"
- 
+
 on:
   push:
     branches:
@@ -23,7 +23,16 @@ jobs:
       - name: Login to Docker Hub
         run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
 
+      - name: Check Docker Image Existence
+        id: image_check
+        run: |
+          if ! docker manifest inspect docker.io/gvindio/supermariogitopsproject:${{ env.new_version }} > /dev/null; then
+            echo "Docker image does not exist for version ${{ env.new_version }}"
+            exit 1
+          fi
+
       - name: Get Docker Image from Docker Hub
+        if: steps.image_check.outputs.exists == 'true'
         run: |
           docker pull docker.io/gvindio/supermariogitopsproject:${{ env.new_version }}
           docker save -o supermariolatestdockerimage.tar docker.io/gvindio/supermariogitopsproject:${{ env.new_version }}
