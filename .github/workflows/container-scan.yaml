@@ -11,7 +11,7 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4 # Updated to the latest version
 
       - name: Read Version Number
         id: version_step
@@ -26,13 +26,15 @@ jobs:
       - name: Check Docker Image Existence
         id: image_check
         run: |
-          if ! docker manifest inspect docker.io/gvindio/supermariogitopsproject:${{ env.new_version }} > /dev/null; then
+          if docker manifest inspect docker.io/gvindio/supermariogitopsproject:${{ env.new_version }} > /dev/null; then
+            echo "exists=true" >> $GITHUB_ENV
+          else
             echo "Docker image does not exist for version ${{ env.new_version }}"
             exit 1
           fi
 
       - name: Get Docker Image from Docker Hub
-        if: steps.image_check.outputs.exists == 'true'
+        if: env.exists == 'true'
         run: |
           docker pull docker.io/gvindio/supermariogitopsproject:${{ env.new_version }}
           docker save -o supermariolatestdockerimage.tar docker.io/gvindio/supermariogitopsproject:${{ env.new_version }}
