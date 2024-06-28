@@ -4,27 +4,30 @@ on:
   push:
     branches:
       - main
- 
-env:
-  VERSION: $(( $(cat version.txt) + 1 ))
-  
+
 jobs:
-  
   run_container_image_scan_on_supermario_docker_image:
-    runs-on: ubuntu-latest	
- 
+    runs-on: ubuntu-latest
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
- 
+
+      - name: Read Version Number
+        id: version_step
+        run: |
+          version=$(cat version.txt)
+          new_version=$((version + 1))
+          echo "new_version=$new_version" >> $GITHUB_ENV
+
       - name: Login to Docker Hub
         run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
-        
+
       - name: Get Docker Image from Docker Hub
         run: |
-          docker pull docker.io/gvindio/supermariogitopsproject:${{ env.VERSION }}
-          docker save -o supermariolatestdockerimage.tar docker.io/gvindio/supermariogitopsproject:${{ env.VERSION }}
-     
+          docker pull docker.io/gvindio/supermariogitopsproject:${{ env.new_version }}
+          docker save -o supermariolatestdockerimage.tar docker.io/gvindio/supermariogitopsproject:${{ env.new_version }}
+
       - name: Run Trivy vulnerability scanner in tarball mode
         uses: aquasecurity/trivy-action@master
         with:
