@@ -1,23 +1,29 @@
-name: "Run SAST Scan on SuperMario Game Project"
-
-# on:
-#   push:
-#     branches:
-#       - main
+name: "Build and push Super Mario Docker image with static tag to Docker Hub"
+ 
+on:
+  push:
+    branches:
+      - main
   
 jobs:
-
-  sonarqube_sast_scan:
+  
+  build_push_supermario_docker_image:
     runs-on: ubuntu-latest
-
+ 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
-        with:
-          fetch-depth: 0  # Shallow clones should be disabled for better analysis relevance
+  
+      - name: Login to Docker Hub
+        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+ 
+      - name: Build and Push Docker Image
+        run: |
+          docker build -t docker.io/gvindio/supermariogitopsproject:1 .
+          docker push docker.io/gvindio/supermariogitopsproject:1
+ 
 
-      - name: SonarQube Scan
-        uses: sonarsource/sonarqube-scan-action@master
-        env:
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+3) Create a token in Docker Hub and save it for use in Step 4) 
+4) Create DOCKERHUB_TOKEN,DOCKERHUB_USERNAME secrets as repository secrets.
+5) Push the code to remote Github repo.
+
