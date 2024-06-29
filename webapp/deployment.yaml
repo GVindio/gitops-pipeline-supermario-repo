@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: supermariogame-container
-        image: gvindio/supermariogitopsproject:2
+        image: gvindio/supermariogitopsproject:12
         ports:
         - containerPort: 8080
 
